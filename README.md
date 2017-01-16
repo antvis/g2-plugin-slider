@@ -1,2 +1,16 @@
 # g2-plugin-slider
-G2 数据筛选滑动条插件
+
+
+---
+
+## Install
+
+```bash
+npm install g2-plugin-slider --save
+```
+
+## Usage
+
+```js
+var G2PluginSlider = require('g2-plugin-slider');
+```
