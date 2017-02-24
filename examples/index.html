@@ -751,7 +751,9 @@
 
       
       <div class="example-html">
-        <div id="c1"></div>
+        <!-- 载入 G2 脚本 -->
+<script src="https://a.alipayobjects.com/g/datavis/g2/2.2.4/g2.js"></script>
+<div id="c1"></div>
 <div id="range"></div>
       </div>
       
@@ -771,10 +773,11 @@
       <h1>Slider</h1>
 <hr></hr>
 <h2>code</h2>
-<div class="highlight"><pre><code language=html><span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">id</span>=<span class="hljs-string">"c1"</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
+<div class="highlight"><pre><code language=html><span class="hljs-comment">&lt;!-- 载入 G2 脚本 --&gt;</span>
+<span class="hljs-tag">&lt;<span class="hljs-name">script</span> <span class="hljs-attr">src</span>=<span class="hljs-string">"https://a.alipayobjects.com/g/datavis/g2/2.2.4/g2.js"</span>&gt;</span><span class="undefined"></span><span class="hljs-tag">&lt;/<span class="hljs-name">script</span>&gt;</span>
+<span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">id</span>=<span class="hljs-string">"c1"</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span>
 <span class="hljs-tag">&lt;<span class="hljs-name">div</span> <span class="hljs-attr">id</span>=<span class="hljs-string">"range"</span>&gt;</span><span class="hljs-tag">&lt;/<span class="hljs-name">div</span>&gt;</span></code></pre></div>
 <div class="highlight"><pre><code language=js><span class="hljs-keyword">var</span> $ = <span class="hljs-built_in">require</span>(<span class="hljs-string">'jquery'</span>);
-<span class="hljs-keyword">var</span> G2 = <span class="hljs-built_in">require</span>(<span class="hljs-string">'g2'</span>);
 <span class="hljs-built_in">require</span>(<span class="hljs-string">'g2-plugin-slider'</span>);
 $.getJSON(<span class="hljs-string">'./candleSticks.json'</span>, <span class="hljs-function"><span class="hljs-keyword">function</span>(<span class="hljs-params">data</span>) </span>{
     <span class="hljs-keyword">var</span> Stat = G2.Stat;
