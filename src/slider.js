@@ -54,6 +54,34 @@ Util.augment(Slider, {
   _init: function() {
     this.set('container', document.getElementById(this.get('domId')));
     this.set('firstRender', 'true');
+    var linkCharts = this.get('charts');
+    var chart = Util.isArray(linkCharts) ? linkCharts[0] : linkCharts;
+    var forceFit = chart.get('parent') ? chart.get('parent').get('forceFit') : chart.get('forceFit');
+    if (forceFit) {
+      window.addEventListener('resize', Util.wrapBehavior(this, '_initForceFitEvent'));
+    }
+  },
+  _initForceFitEvent: function() {
+    var timer = setTimeout(Util.wrapBehavior(this, 'forceFit'), 200);
+    clearTimeout(this.get('resizeTimer'));
+    this.set('resizeTimer', timer);
+  },
+  forceFit: function() {
+    var linkCharts = this.get('charts');
+    var chart = Util.isArray(linkCharts) ? linkCharts[0] : linkCharts;
+    var width = chart.get('parent') ? chart.get('parent').get('width') : chart.get('width');
+    var height = this.get('height');
+    if (width !== this.get('width')) {
+      var canvas = this.get('canvas');
+      var filters = chart.get('filters');
+      var xDim = this.get('xDim');
+      this.set('start', filters[xDim][0]);
+      this.set('end', filters[xDim][1]);
+      this.set('width', width);
+      canvas.changeSize(width, height);
+      this.set('changeSize', true);
+      this.repaint();
+    }
   },
   _initCanvas: function() {
     var width = this.get('width');
@@ -79,7 +107,12 @@ Util.augment(Slider, {
 
     var xDim = this.get('xDim');
     var yDim = this.get('yDim');
-    var xScale = Util.clone(linkChart.getScale(xDim));
+    var xScale;
+    if (this.get('changeSize')) {
+      xScale = this.get('xScale');
+    } else {
+      xScale = Util.clone(linkChart.getScale(xDim));
+    }
 
     if (yDim) { // 如果声明了 yDim, 则创建滑块背景图
       var xDimCfg = {};
@@ -272,12 +305,20 @@ Util.augment(Slider, {
   render: function() {
     var linkCharts = this.get('charts');
     var chart = Util.isArray(linkCharts) ? linkCharts[0] : linkCharts;
-    var plotRange = chart.get('plotRange');
+    var plotRange;
+    var width;
     if (chart.get('parent')) {
       plotRange = chart.get('parent').get('plotRange');
+      width = chart.get('parent').get('width');
+    } else {
+      plotRange = chart.get('plotRange');
+      width = chart.get('width');
     }
+
     this.set('plotWidth', plotRange.tr.x - plotRange.tl.x);
     this.set('marginLeft', plotRange.tl.x);
+    this.set('width', width);
+
     if (!this.get('canvas')) {
       this._initCanvas();
     }
@@ -288,7 +329,9 @@ Util.augment(Slider, {
     var xDim = this.get('xDim');
     var min = this._getHandleValue('min');
     var max = this._getHandleValue('max');
-    this._updateLinkCharts(xDim, [min, max]);
+    if (!this.get('changeSize')) {
+      this._updateLinkCharts(xDim, [min, max]);
+    }
     this.get('canvas').draw();
   },
   destroy: function() {
@@ -301,10 +344,14 @@ Util.augment(Slider, {
       container.removeChild(container.firstChild);
     }
     Slider.superclass.destroy.call(this);
+    window.removeEventListener('resize', Util.getWrapBehavior(this, '_initForceFitEvent'));
   },
   clear: function() {
+    var container = this.get('container');
+    container.style.backgroundImage = '';
     this.get('canvas').clear();
     this.get('bgChart') && this.get('bgChart').destroy();
+    this.set('bgChart', null);
   },
   repaint: function() {
     this.set('firstRender', false);

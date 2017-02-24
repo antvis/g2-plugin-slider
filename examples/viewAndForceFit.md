@@ -12,20 +12,14 @@
 ````
 
 ````js
-var $ = require('jquery');
-require('g2-plugin-slider');
-$.getJSON('./candleSticks.json', function(data) {
+  var $ = require('jquery');
+  require('g2-plugin-slider');
+  $.getJSON('./candleSticks.json', function(data) {
     var Stat = G2.Stat;
     var chart = new G2.Chart({
       id: 'c1',
-      width: 800,
-      height: 250,
-      plotCfg: {
-        margin: [30, 120, 30],
-        background: {
-          fill: '#191821'
-        }
-      }
+      forceFit: true,
+      height: 250
     });
     // 创建数据源
     var Frame = G2.Frame;
@@ -33,19 +27,28 @@ $.getJSON('./candleSticks.json', function(data) {
     frame.addCol('trend', function(obj) {
       return (obj.start <= obj.end) ? 0 : 1;
     });
-    chart.source(frame, {
+    var view1 = chart.createView({
+      start: {
+        x: 0,
+        y: 0
+      },
+      end: {
+        x: 1,
+        y: 0.7
+      }
+    });
+    view1.source(frame, {
       'trend': {
         type: 'cat',
         alias: '趋势',
         values: ['上涨', '下跌']
       },
       'time': {
-        type: 'timeCat',
+        type: 'time',
         nice: false,
         mask: 'mm-dd',
         alias: '时间',
-        tickCount: 10,
-        range: [0, 1]
+        tickCount: 10
       },
       'volumn': {
         alias: '成交量'
@@ -66,56 +69,54 @@ $.getJSON('./candleSticks.json', function(data) {
         alias: '股票价格'
       }
     });
-    chart.axis('time', {
+    view1.axis('time', {
       title: null
     });
-    chart.schema()
+    view1.schema()
       .position('time*(start+end+max+min)')
       .color('trend', ['#2AF483', '#F80041'])
       .shape('candle')
       .tooltip('start*end*max*min*volumn');
-    var chart1 = new G2.Chart({
-      id: 'c1',
-      width: 800,
-      height: 80,
-      plotCfg: {
-        margin: [10, 120, 10],
-        background: {
-          fill: '#191821'
-        }
+    var view2 = chart.createView({
+      start: {
+        x: 0,
+        y: 0.85
+      },
+      end: {
+        x: 1,
+        y: 1
       }
     });
-    chart1.source(frame);
-    chart1.col('volumn', {
+
+    view2.source(frame);
+    view2.col('volumn', {
       alias: '成交量(万)',
       tickInterval: 4000
     });
-    chart1.col('time', {
-      type: 'timeCat',
+    view2.col('time', {
+      type: 'time',
       nice: false,
       mask: 'mm-dd',
       alias: '时间',
-      tickCount: 10,
-      range: [0, 1]
+      tickCount: 10
     });
-    chart1.axis('time', false);
-    chart1.axis('volumn', {
+    view2.axis('time', false);
+    view2.axis('volumn', {
       formatter: function(val) {
         return parseInt(val / 1000, 10) + 'k';
       }
     });
-    chart1.interval()
+    view2.interval()
       .position('time*volumn')
       .color('trend', ['#2AF483', '#F80041'])
-      // .tooltip('volumn');
-    chart1.legend('trend', false);
+    chart.legend('trend', false);
     var slider = new G2.Plugin.slider({
       domId: 'range',
       height: 30,
-      charts: [chart, chart1],
+      charts: [view1, view2],
       xDim: 'time',
-      yDim: 'max'
+      yDim: 'volumn'
     });
     slider.render();
-});
+  });
 ````

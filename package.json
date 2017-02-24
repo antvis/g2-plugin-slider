@@ -1,6 +1,6 @@
 {
   "name": "g2-plugin-slider",
-  "version": "1.0.0",
+  "version": "1.1.1",
   "description": "datazoom slider plugin for G2.",
   "keywords": [
     "g2",
@@ -29,7 +29,8 @@
     "doc": "atool-doc",
     "doc-build": "atool-doc --build",
     "test-keep": "atool-test -k --no-coverage",
-    "ci": "tnpm run lint && tnpm run test"
+    "ci": "tnpm run lint && tnpm run test",
+    "gh-pages": "atool-doc --build && gh-pages -d __site"
   },
   "entry": {
     "slider": "./index"
@@ -53,7 +54,8 @@
     "pre-commit": "^1.1.2",
     "eslint": "~1.10.3",
     "eslint-config-airbnb": "~4.0.0",
-    "g2": "~2.2.0"
+    "g2": "~2.2.0",
+    "gh-pages": "^0.11.0"
   },
   "engines": {
     "node": ">=4.0.0"
