@@ -8,8 +8,9 @@
 var G2 = require('g2');
 var Util = G2.Util;
 var Base = G2.Base;
+var DataFrame = G2.Frame;
 var Canvas = G2.Canvas;
-var Components = Canvas.Components;
+var Range = require('./range');
 var OFFSET = 5;
 
 var Slider = function(cfg) {
@@ -37,7 +38,7 @@ Slider.ATTRS = {
   backgroundAttr: {
     stroke: '#E2E2E2',
     fill: '#F3F3F3',
-    globalAlpha: 0.2,
+    opacity: 0.2,
     lineWidth: 1
   },
   range: [0, 100],
@@ -73,7 +74,7 @@ Util.augment(Slider, {
     var height = this.get('height');
     if (width !== this.get('width')) {
       var canvas = this.get('canvas');
-      var filters = chart.get('filters');
+      var filters = chart.get('options').filters;
       var xDim = this.get('xDim');
       this.set('start', filters[xDim][0]);
       this.set('end', filters[xDim][1]);
@@ -101,9 +102,12 @@ Util.augment(Slider, {
     node.style.zIndex = 3;
     this.set('canvas', canvas);
   },
-  _initBackground: function() {
-    var linkCharts = this.get('charts');
-    var linkChart = Util.isArray(linkCharts) ? linkCharts[0] : linkCharts;
+  _initBackground: function(linkChart) {
+    var data = linkChart.get('data');
+    if (!(data instanceof DataFrame)) {
+      data = new DataFrame(data);
+    }
+    var options = linkChart.get('options');
 
     var xDim = this.get('xDim');
     var yDim = this.get('yDim');
@@ -111,15 +115,12 @@ Util.augment(Slider, {
     if (this.get('changeSize')) {
       xScale = this.get('xScale');
     } else {
-      xScale = Util.clone(linkChart.getScale(xDim));
+      var scaleAssist = linkChart.get('scaleAssist');
+      scaleAssist.defs = Util.mix({}, true, scaleAssist.defs, options.scales);
+      xScale = scaleAssist.createScale(xDim, data);
     }
 
     if (yDim) { // 如果声明了 yDim, 则创建滑块背景图
-      var xDimCfg = {};
-      if (xScale.type === 'time' || xScale.type === 'timeCat') {
-        xDimCfg.type = 'time';
-        xDimCfg.mask = xScale.mask;
-      }
       var bgChart = new G2.Chart({
         id: this.get('domId'),
         width: this.get('plotWidth'),
@@ -128,12 +129,11 @@ Util.augment(Slider, {
           margin: 0
         }
       });
-      bgChart.source(linkChart.get('data'));
-      bgChart.col(xDim, Util.mix({
+      bgChart.source(data);
+      bgChart.col(xDim, {
         range: [0, 1],
         nice: false
-      }, xDimCfg));
-
+      });
       bgChart.axis(false);
       bgChart.tooltip(false);
       bgChart.legend(false);
@@ -222,7 +222,7 @@ Util.augment(Slider, {
     var maxHandleElement = this._initHorizontalHandle('max');
     var backgroundElement = this._initSliderBackground();
 
-    var rangeElement = canvas.addGroup(Components.Range, {
+    var rangeElement = canvas.addGroup(Range, {
       minHandleElement: minHandleElement,
       maxHandleElement: maxHandleElement,
       backgroundElement: backgroundElement,
@@ -273,6 +273,7 @@ Util.augment(Slider, {
       container.style.backgroundImage = 'url(' + img + ')';
       container.style.backgroundRepeat = 'no-repeat';
       container.style.backgroundPositionX = this.get('marginLeft') + 'px';
+      container.style.backgroundSize = 'contain';
       bgChart.destroy();
       this.set('bgChart', null);
     }
@@ -285,11 +286,11 @@ Util.augment(Slider, {
       Util.each(linkCharts, function(chart) {
         chart.filter(dim, range);
       });
-      var chart = linkCharts[0].get('parent');
+      var parentChart = linkCharts[0].get('parent');
       if (self.get('firstRender')) {
-        chart.render();
+        parentChart.render();
       } else {
-        chart.repaint();
+        parentChart.repaint();
       }
     } else {
       Util.each(linkCharts, function(chart) {
@@ -322,7 +323,7 @@ Util.augment(Slider, {
     if (!this.get('canvas')) {
       this._initCanvas();
     }
-    this._initBackground();
+    this._initBackground(chart);
     this._initSlider();
     this._bindEvent();
 

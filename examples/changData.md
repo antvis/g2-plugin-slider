@@ -6,7 +6,7 @@
 
 ````html
 <!-- 载入 G2 脚本 -->
-<script src="https://a.alipayobjects.com/g/datavis/g2/2.2.4/g2.js"></script>
+<script src="https://a.alipayobjects.com/g/datavis/g2/2.3.0/g2.js"></script>
 <div id="c1"></div>
 <div id="range"></div>
 ````
