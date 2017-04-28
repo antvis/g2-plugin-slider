@@ -1,6 +1,6 @@
 {
   "name": "g2-plugin-slider",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "datazoom slider plugin for G2.",
   "keywords": [
     "g2",
@@ -36,7 +36,7 @@
     "slider": "./index"
   },
   "peerDependencies": {
-    "g2": "^2.2.0"
+    "g2": ">=2.3.0"
   },
   "devDependencies": {
     "atool-build": "0.6.x",
