@@ -1,0 +1,49 @@
+const webpack = require('webpack');
+const {
+  resolve
+} = require('path');
+
+module.exports = {
+  entry: {
+    'g2-plugin-slider': './index.js'
+  },
+  output: {
+    filename: '[name].js',
+    library: 'Slider',
+    libraryTarget: 'var',
+    externals: [
+      { '@antv/g2': 'window.G2' }
+    ],
+    path: resolve(__dirname, 'build/')
+  },
+  module: {
+    rules: [
+      {
+        test: /\.js$/,
+        // exclude: /(node_modules|bower_components)/,
+        use: {
+          loader: 'babel-loader',
+          options: {
+            babelrc: false,
+            plugins: [
+              'transform-remove-strict-mode'
+            ],
+            presets: [
+              [
+                'es2015', {
+                  loose: true,
+                  modules: false
+                }
+              ],
+              'stage-0'
+            ]
+          }
+        }
+      }
+    ]
+  },
+  plugins: [
+    new webpack.NoEmitOnErrorsPlugin(),
+    new webpack.optimize.AggressiveMergingPlugin()
+  ]
+};
