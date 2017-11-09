@@ -1,6 +1,6 @@
 {
   "name": "@antv/g2-plugin-slider",
-  "version": "1.0.0-beta",
+  "version": "1.0.0-beta.7",
   "description": "A datazoom slider plugin for G2.",
   "keywords": [
     "g2",
@@ -8,15 +8,17 @@
     "plugin",
     "datazoom"
   ],
-  "main": "index.js",
-  "homepage": "",
-  "author": "https://github.com/orgs/antvis/people",
+  "main": "build/g2-plugin-slider.js",
+  "browser": "build/g2-plugin-slider.js",
+  "module": "index.js",
+  "homepage": "http://gitlab.alibaba-inc.com/datavis/g2-plugin-slider",
+  "author": "sima.zhang",
   "repository": {
     "type": "git",
-    "url": ""
+    "url": "git@gitlab.alibaba-inc.com:datavis/g2-plugin-slider.git"
   },
   "bugs": {
-    "url": ""
+    "url": "http://gitlab.alibaba-inc.com/datavis/g2-plugin-slider/issues"
   },
   "peerDependencies": {
     "@antv/g2": ">=3.0.0-rc"
@@ -47,7 +49,7 @@
   "scripts": {
     "build": "webpack",
     "ci": "tnpm run lint && tnpm run test",
-    "compress": "uglifyjs --compress --mangle --output dist/g-$npm_package_version.min.js -- build/g.js",
+    "compress": "uglifyjs --compress --mangle --output dist/g-$npm_package_version.min.js -- build/g2-plugin-slider.js",
     "coverage": "npm run coverage-generator && npm run coverage-viewer",
     "coverage-viewer": "torch-coverage",
     "coverage-generator": "torch --coverage --compile --renderer --recursive test/unit",

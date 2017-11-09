@@ -10,10 +10,7 @@ module.exports = {
   output: {
     filename: '[name].js',
     library: 'Slider',
-    libraryTarget: 'var',
-    externals: [
-      { '@antv/g2': 'window.G2' }
-    ],
+    libraryTarget: 'umd',
     path: resolve(__dirname, 'build/')
   },
   module: {

@@ -2,8 +2,11 @@
  * @fileOverview The class of slider
  * @author sima.zhang
  */
-const { Util, G } = require('@antv/g2');
+const G2 = window && window.G2;
+const { Util, G } = G2;
 const { Group, DomUtil } = G;
+const OFFSET = 5;
+
 
 class Range extends Group {
   getDefaultCfg() {
@@ -71,18 +74,91 @@ class Range extends Group {
     };
   }
 
+  _initHorizontalHandle(type) {
+    const handle = this.addGroup();
+    const layout = this.get('layout');
+    const handleStyle = this.get('handleStyle');
+    const img = handleStyle.img;
+    const iconWidth = handleStyle.width;
+    const iconHeight = handleStyle.height;
+
+    let text;
+
+    if (layout === 'horizontal') {
+      const iconWidth = handleStyle.width;
+      handle.addShape('Image', {
+        attrs: {
+          x: -iconWidth / 2,
+          y: 0,
+          width: iconWidth,
+          height: iconHeight,
+          img
+        }
+      });
+      text = handle.addShape('Text', {
+        attrs: Util.mix({
+          x: (type === 'min') ? -(iconWidth / 2 + OFFSET) : iconWidth / 2 + OFFSET,
+          y: iconHeight / 2,
+          textAlign: (type === 'min') ? 'end' : 'start',
+          textBaseline: 'middle',
+          text: type === 'min' ? this.get('minText') : this.get('maxText')
+        }, this.get('textStyle'))
+      });
+    } else {
+      handle.addShape('Image', {
+        attrs: {
+          x: 0,
+          y: -iconHeight / 2,
+          width: iconWidth,
+          height: iconHeight,
+          img
+        }
+      });
+      text = handle.addShape('Text', {
+        attrs: Util.mix({
+          x: iconWidth / 2,
+          y: (type === 'min') ? (iconHeight / 2 + OFFSET) : -(iconHeight / 2 + OFFSET),
+          textAlign: 'center',
+          textBaseline: 'middle',
+          text: type === 'min' ? this.get('minText') : this.get('maxText')
+        }, this.get('textStyle'))
+      });
+    }
+
+    this.set(type + 'TextElement', text);
+    return handle;
+  }
+
+  _initSliderBackground() {
+    const backgroundElement = this.addGroup();
+    backgroundElement.initTransform();
+    backgroundElement.translate(0, 0);
+    backgroundElement.addShape('Rect', {
+      attrs: Util.mix({
+        x: 0,
+        y: 0,
+        width: this.get('width'),
+        height: this.get('height')
+      }, this.get('backgroundStyle'))
+    });
+    return backgroundElement;
+  }
+
   _beforeRenderUI() {
     const layout = this.get('layout');
-    const backgroundElement = this.get('backgroundElement');
-    const minHandleElement = this.get('minHandleElement');
-    const maxHandleElement = this.get('maxHandleElement');
+    const backgroundElement = this._initSliderBackground();
+    const minHandleElement = this._initHorizontalHandle('min');
+    const maxHandleElement = this._initHorizontalHandle('max');
     const middleHandleElement = this.addShape('rect', {
       attrs: this.get('middleAttr')
     });
     const trigerCursor = (layout === 'vertical') ? 'ns-resize' : 'ew-resize';
 
-    this.add([ backgroundElement, minHandleElement, maxHandleElement ]);
+    // this.add([ backgroundElement, minHandleElement, maxHandleElement ]);
     this.set('middleHandleElement', middleHandleElement);
+    this.set('minHandleElement', minHandleElement);
+    this.set('maxHandleElement', maxHandleElement);
+    this.set('backgroundElement', backgroundElement);
     backgroundElement.set('zIndex', 0);
     middleHandleElement.set('zIndex', 1);
     minHandleElement.set('zIndex', 2);
@@ -110,10 +186,8 @@ class Range extends Group {
     const minHandleElement = this.get('minHandleElement');
     const maxHandleElement = this.get('maxHandleElement');
     const middleHandleElement = this.get('middleHandleElement');
-
     minHandleElement.initTransform();
     maxHandleElement.initTransform();
-
     if (layout === 'horizontal') {
       middleHandleElement.attr({
         x: width * minRatio,
@@ -121,6 +195,7 @@ class Range extends Group {
         width: (maxRatio - minRatio) * width,
         height
       });
+
       minHandleElement.translate(minRatio * width, 0);
       maxHandleElement.translate(maxRatio * width, 0);
     } else {
@@ -130,8 +205,8 @@ class Range extends Group {
         width,
         height: (maxRatio - minRatio) * height
       });
-      minHandleElement.translate(width / 2, (1 - minRatio) * height);
-      maxHandleElement.translate(width / 2, (1 - maxRatio) * height);
+      minHandleElement.translate(0, (1 - minRatio) * height);
+      maxHandleElement.translate(0, (1 - maxRatio) * height);
     }
   }
 

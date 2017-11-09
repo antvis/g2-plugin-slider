@@ -2,62 +2,58 @@
  * @fileOverview G2's plugin for datazoom.
  * @author sima.zhang
  */
-
-const { Chart, Util, G } = require('@antv/g2');
-const { Canvas } = G;
-
+const G2 = window && window.G2;
+const { Chart, Util, G, Global } = G2;
+const { Canvas, DomUtil } = G;
 const Range = require('./component/range');
-const OFFSET = 5;
 
 class Slider {
   _initProps() {
-    this.charts = null;
     this.height = null;
     this.width = null;
-    this.start = null;
-    this.end = null;
+    this.padding = Global.plotCfg.padding;
     this.container = null;
     this.xAxis = null;
     this.yAxis = null;
     // 选中区域的样式
     this.fillerStyle = {
-      fill: '#D5DAE3',
-      fillOpacity: 0.2
+      fill: '#BDCCED',
+      fillOpacity: 0.3
     };
     // 滑动条背景样式
     this.backgroundStyle = {
-      stroke: '#E2E2E2',
-      fill: '#F3F3F3',
-      opacity: 0.2,
+      stroke: '#CCD6EC',
+      fill: '#CCD6EC',
+      fillOpacity: 0.3,
       lineWidth: 1
     };
     this.range = [ 0, 100 ];
     this.layout = 'horizontal';
     // 文本颜色
     this.textStyle = {
-      fill: '#333'
+      fill: '#545454'
     };
     // 滑块的样式
     this.handleStyle = {
-      img: 'https://t.alipayobjects.com/images/rmsweb/T1YohhXd4bXXXXXXXX.png'
+      img: 'https://gw.alipayobjects.com/zos/rmsportal/QXtfhORGlDuRvLXFzpsQ.png',
+      width: 5
     };
     // 背景图表的配置，如果为 false 则表示不渲染
-    this.backgroundChart = {};
+    this.backgroundChart = {
+      type: [ 'area' ], // 图表的类型，可以是字符串也可是是数组
+      color: '#CCD6EC'
+    };
   }
+
   constructor(cfg) {
     this._initProps();
     Util.mix(this, cfg);
-    this.init();
-  }
-
-  init() {
-    this.container = document.getElementById(this.container);
-    this.firstRender = true;
-
-    const linkCharts = this.charts;
-    const chart = Util.isArray(linkCharts) ? linkCharts[0] : linkCharts;
-    const forceFit = chart.get('parent') ? chart.get('parent').get('forceFit') : chart.get('forceFit');
-    if (forceFit) {
+    this.domContainer = document.getElementById(this.container);
+    this.handleStyle = Util.mix({
+      width: this.height,
+      height: this.height
+    }, this.handleStyle);
+    if (this.width === 'auto') { // 宽度自适应
       window.addEventListener('resize', Util.wrapBehavior(this, '_initForceFitEvent'));
     }
   }
@@ -69,54 +65,53 @@ class Slider {
   }
 
   forceFit() {
-    const linkCharts = this.charts;
-    const chart = Util.isArray(linkCharts) ? linkCharts[0] : linkCharts;
-    const width = chart.get('parent') ? chart.get('parent').get('width') : chart.get('width');
+    const width = DomUtil.getWidth(this.domContainer);
     const height = this.height;
-    if (width !== this.width) {
+    if (width !== this.domWidth) {
       const canvas = this.canvas;
-      const filters = chart.get('options').filters;
-      const xAxis = this.xAxis;
-      this.start = filters[xAxis][0];
-      this.end = filters[xAxis][1];
-      this.width = width;
-      canvas.changeSize(width, height);
-      this.changeSize = true;
-      this.repaint();
+      canvas.changeSize(width, height); // 改变画布尺寸
+      this.bgChart && this.bgChart.changeWidth(width);
+      canvas.clear();
+      this._initWidth();
+      this._initSlider(); // 初始化滑动条
+      this._bindEvent();
+      canvas.draw();
+    }
+  }
+
+  _initWidth() {
+    let width;
+    if (this.width === 'auto') {
+      width = DomUtil.getWidth(this.domContainer);
+    } else {
+      width = this.width;
+    }
+    this.domWidth = width;
+    const padding = Util.toAllPadding(this.padding);
+
+    if (this.layout === 'horizontal') {
+      this.plotWidth = width - padding[1] - padding[3];
+      this.plotPadding = padding[3];
+      this.plotHeight = this.height;
+    } else if (this.layout === 'vertical') {
+      this.plotWidth = this.width;
+      this.plotHeight = this.height - padding[0] - padding[2];
+      this.plotPadding = padding[0];
     }
   }
 
   render() {
-    const linkCharts = this.charts;
-    const chart = Util.isArray(linkCharts) ? linkCharts[0] : linkCharts;
-    let plotRange;
-    let width;
-    if (chart.get('parent')) {
-      plotRange = chart.get('parent').get('plotRange');
-      width = chart.get('parent').get('width');
-    } else {
-      plotRange = chart.get('plotRange');
-      width = chart.get('width');
-    }
-
-    this.plotWidth = plotRange.tr.x - plotRange.tl.x;
-    this.marginLeft = plotRange.tl.x;
-    this.width = width;
-
-    if (!this.canvas) {
-      this._initCanvas();
-    }
-    this._initBackground(chart);
-    this._initSlider();
+    this._initWidth();
+    this._initCanvas(); // 初始化 canvas
+    this._initBackground(); // 初始化背景图表
+    this._initSlider(); // 初始化滑动条
     this._bindEvent();
-
-    const xAxis = this.xAxis;
-    const min = this._getHandleValue('min');
-    const max = this._getHandleValue('max');
-    if (!this.changeSize) {
-      this._updateLinkCharts(xAxis, [ min, max ]);
-    }
     this.canvas.draw();
+  }
+
+  changeData(data) {
+    this.data = data;
+    this.repaint();
   }
 
   destroy() {
@@ -124,48 +119,35 @@ class Slider {
     rangeElement.off('sliderchange');
     this.bgChart && this.bgChart.destroy();
     this.canvas.destroy();
-    const container = this.container;
+    const container = this.domContainer;
     while (container.hasChildNodes()) {
       container.removeChild(container.firstChild);
     }
-    Slider.superclass.destroy.call(this);
     window.removeEventListener('resize', Util.getWrapBehavior(this, '_initForceFitEvent'));
   }
 
   clear() {
-    const container = this.container;
-    container.style.backgroundImage = '';
-
-    let charts = this.charts;
-    if (!Util.isArray(charts)) {
-      charts = [ charts ];
-    }
-    // Util.each(charts, function(chart) {
-    //   chart.set('_originData', null);
-    // });
-
     this.canvas.clear();
     this.bgChart && this.bgChart.destroy();
     this.bgChart = null;
+    this.scale = null;
+    this.canvas.draw();
   }
 
   repaint() {
-    this.firstRender = false;
     this.clear();
     this.render();
   }
 
   _initCanvas() {
-    const width = this.width;
+    const width = this.domWidth;
     const height = this.height;
     const canvas = new Canvas({
       width,
       height,
-      containerDOM: this.container,
+      containerDOM: this.domContainer,
       capture: false
     });
-    // canvas.set('fontFamily', G2.Global.fontFamily);
-    // style canvas
     const node = canvas.get('el');
     node.style.position = 'absolute';
     node.style.top = 0;
@@ -174,68 +156,63 @@ class Slider {
     this.canvas = canvas;
   }
 
-  _initBackground(linkChart) {
-    const data = linkChart.get('data'); // TODO: 是否会是 DataView 对象
-    // if (!(data instanceof DataFrame)) {
-    //   data = new DataFrame(data);
-    // }
-    const options = linkChart.get('options');
-
+  _initBackground() {
+    const data = this.data;
     const xAxis = this.xAxis;
     const yAxis = this.yAxis;
-    let xScale;
-    if (this.changeSize) {
-      xScale = this.xScale;
-    } else {
-      const scaleController = linkChart.get('scaleController');
-      scaleController.defs = Util.mix({}, true, scaleController.defs, options.scales);
-      xScale = scaleController.createScale(xAxis, data);
+    if (!data) { // 没有数据，则不创建
+      throw new Error('Please specify the data!');
+    }
+    if (!xAxis) {
+      throw new Error('Please specify the xAxis!');
+    }
+    if (!yAxis) {
+      throw new Error('Please specify the yAxis!');
     }
 
-    if (this.backgroundChart) {
-      const backgroundChart = this.backgroundChart;
-      const bgChartX = backgroundChart.xAxis || xAxis;
-      const bgChartY = backgroundChart.yAxis || yAxis;
-      const geom = backgroundChart.geom;
-      const color = backgroundChart.color || '#CED1D4';
-
-      const bgChart = new Chart({
-        container: this.container,
-        width: this.plotWidth,
-        height: this.height,
-        padding: 0
-      });
-      bgChart.source(data);
-      bgChart.scale('#CED1D4', {
-        range: [ 0, 1 ],
-        nice: false
-      });
-      bgChart.axis(false);
-      bgChart.tooltip(false);
-      bgChart.legend(false);
-      if (geom) {
-        bgChart[geom]().position(bgChartX + '*' + bgChartY).color(color);
-      } else {
-        bgChart.area().position(bgChartX + '*' + bgChartY).color(color);
-        bgChart.line().position(bgChartX + '*' + bgChartY).color(color);
-      }
-      bgChart.render();
-      // 自动对齐
-      const canvas = bgChart.get('canvas');
-      const container = canvas.get('el').parentNode;
-      container.style.marginLeft = this.marginLeft + 'px';
-      this.bgChart = bgChart;
+    const backgroundChart = this.backgroundChart;
+    let type = backgroundChart.type;
+    const color = backgroundChart.color;
+    if (!Util.isArray(type)) {
+      type = [ type ];
     }
 
-    this.xScale = xScale;
+    const padding = Util.toAllPadding(this.padding);
+    const bgChart = new Chart({
+      container: this.container,
+      width: this.domWidth,
+      height: this.height,
+      padding: [ 0, padding[1], 0, padding[3] ],
+      animate: false
+    });
+    bgChart.source(data);
+    bgChart.scale(xAxis, {
+      range: [ 0, 1 ],
+      nice: false
+    });
+    bgChart.axis(false);
+    bgChart.tooltip(false);
+    bgChart.legend(false);
+    Util.each(type, eachType => {
+      bgChart[eachType]()
+        .position(xAxis + '*' + yAxis)
+        .color(color)
+        .opacity(1);
+    });
+    bgChart.render();
+    this.bgChart = bgChart;
+    this.scale = this.layout === 'horizontal' ? bgChart.getXScale() : bgChart.getYScales()[0];
+    if (this.layout === 'vertical') {
+      bgChart.destroy();
+    }
   }
 
   _initRange() {
     const start = this.start;
     const end = this.end;
-    const xScale = this.xScale;
-    const min = start ? xScale.scale(start) : 0.3;
-    const max = end ? xScale.scale(end) : 0.7;
+    const scale = this.scale;
+    const min = start ? scale.scale(start) : 1;
+    const max = end ? scale.scale(end) : 1;
     const range = [ min * 100, max * 100 ];
     this.range = range;
     return range;
@@ -246,183 +223,67 @@ class Slider {
     const range = this.range;
     const min = range[0] / 100;
     const max = range[1] / 100;
-    const xScale = this.xScale;
+    const scale = this.scale;
     if (type === 'min') {
-      value = this.start ? this.start : xScale.invert(min);
+      value = this.start ? this.start : scale.invert(min);
     } else {
-      value = this.end ? this.end : xScale.invert(max);
+      value = this.end ? this.end : scale.invert(max);
     }
     return value;
-  }
-
-  _initHorizontalHandle(type) {
-    const canvas = this.canvas;
-    const handle = canvas.addGroup();
-    const height = this.height;
-    const xScale = this.xScale;
-    const handleValue = xScale.getText(this._getHandleValue(type));
-
-    handle.addShape('Image', {
-      attrs: Util.mix({
-        x: -height / 2,
-        y: 0,
-        width: height,
-        height
-      }, this.handleStyle)
-    });
-    const text = handle.addShape('Text', {
-      attrs: Util.mix({
-        x: (type === 'min') ? -(height / 2 + OFFSET) : height / 2 + OFFSET,
-        y: height / 2,
-        textAlign: (type === 'min') ? 'end' : 'start',
-        textBaseline: 'middle',
-        text: handleValue
-      }, this.textStyle)
-    });
-
-    this[type + 'TextElement'] = text;
-    return handle;
-  }
-
-  _initSliderBackground() {
-    const canvas = this.canvas;
-    const backgroundElement = canvas.addGroup();
-    backgroundElement.initTransform();
-    backgroundElement.translate(0, 0);
-    backgroundElement.addShape('Rect', {
-      attrs: Util.mix({
-        x: 0,
-        y: 0,
-        width: this.plotWidth,
-        height: this.height
-      }, this.backgroundStyle)
-    });
-    return backgroundElement;
   }
 
   _initSlider() {
     const canvas = this.canvas;
     const range = this._initRange();
-    const minHandleElement = this._initHorizontalHandle('min');
-    const maxHandleElement = this._initHorizontalHandle('max');
-    const backgroundElement = this._initSliderBackground();
-
+    const scale = this.scale;
     const rangeElement = canvas.addGroup(Range, {
-      minHandleElement,
-      maxHandleElement,
-      backgroundElement,
       middleAttr: this.fillerStyle,
       range,
       layout: this.layout,
       width: this.plotWidth,
-      height: this.height
+      height: this.plotHeight,
+      backgroundStyle: this.backgroundStyle,
+      textStyle: this.textStyle,
+      handleStyle: this.handleStyle,
+      minText: scale.getText(this._getHandleValue('min')),
+      maxText: scale.getText(this._getHandleValue('max'))
     });
-    rangeElement.translate(this.marginLeft, 0);
+    if (this.layout === 'horizontal') {
+      rangeElement.translate(this.plotPadding, 0);
+    } else if (this.layout === 'vertical') {
+      rangeElement.translate(0, this.plotPadding);
+    }
     this.rangeElement = rangeElement;
   }
 
   _bindEvent() {
     const self = this;
     const rangeElement = self.rangeElement;
-    const xAxis = self.xAxis;
-    const xScale = self.xScale;
-
     rangeElement.on('sliderchange', function(ev) {
       const range = ev.range;
       const minRatio = range[0] / 100;
       const maxRatio = range[1] / 100;
-      const min = xScale.invert(minRatio);
-      const max = xScale.invert(maxRatio);
-      const minText = xScale.getText(min);
-      const maxText = xScale.getText(max);
-      self._updateElement(minText, maxText);
-      self._updateLinkCharts(xAxis, [ min, max ]);
+      self._updateElement(minRatio, maxRatio);
     });
   }
 
-  _updateElement(min, max) {
-    const minTextElement = this.minTextElement;
-    const maxTextElement = this.maxTextElement;
-    minTextElement.attr(Util.mix({}, minTextElement.__attrs, {
-      text: min
-    }));
-    maxTextElement.attr(Util.mix({}, maxTextElement.__attrs, {
-      text: max
-    }));
+  _updateElement(minRatio, maxRatio) {
+    const scale = this.scale;
+    const rangeElement = this.rangeElement;
+    const minTextElement = rangeElement.get('minTextElement');
+    const maxTextElement = rangeElement.get('maxTextElement');
+    const min = scale.invert(minRatio);
+    const max = scale.invert(maxRatio);
+    const minText = scale.getText(min);
+    const maxText = scale.getText(max);
+    minTextElement.attr('text', minText);
+    maxTextElement.attr('text', maxText);
+    this.start = minText;
+    this.end = maxText;
 
-    if (this.bgChart) { // 将背景图表转换为背景图
-      const bgChart = this.bgChart;
-      const canvas = bgChart.get('canvas').get('el');
-      const img = canvas.toDataURL('image/png');
-      const container = this.container;
-      container.style.width = this.width + 'px';
-      container.style.height = this.height + 'px';
-      container.style.backgroundImage = 'url(' + img + ')';
-      container.style.backgroundRepeat = 'no-repeat';
-      container.style.backgroundPositionX = this.marginLeft + 'px';
-      container.style.backgroundSize = 'contain';
-      bgChart.destroy();
-      this.bgChart = null;
+    if (this.onChange) {
+      this.onChange(minText, maxText);
     }
-    this.firstRender = false;
-  }
-
-  _updateLinkCharts(dim, range) {
-    const self = this;
-    const linkCharts = Util.isArray(self.charts) ? self.charts : [ self.charts ];
-    const xScale = self.xScale;
-    const min = xScale.translate(range[0]);
-    const max = xScale.translate(range[1]);
-    // if (xScale.isCategory && xScale.type !== 'timeCat') { // 分类
-    //   const values = xScale.values;
-    //   const minIndex = values.indexOf(range[0]);
-    //   const maxIndex = values.indexOf(range[1]);
-    //   range = values.slice(minIndex, maxIndex + 1);
-
-    //   Util.each(linkCharts, function(chart) {
-    //     let frame;
-    //     if (chart.get('_originData')) {
-    //       frame = chart.get('_originData');
-    //     } else {
-    //       frame = chart.get('data');
-    //       chart.set('_originData', frame);
-    //     }
-
-    //     frame = G2.Frame.filter(frame, function(obj) {
-    //       return range.indexOf(obj[dim]) > -1;
-    //     });
-    //     if (frame && frame.data.length) {
-    //       chart.changeData(frame);
-    //     }
-    //   });
-    // } else {
-    if (linkCharts[0].get('parent')) {
-      Util.each(linkCharts, function(chart) {
-        chart.filter(dim, val => {
-          val = xScale.translate(val);
-          return val <= max && val >= min;
-        });
-      });
-      const parentChart = linkCharts[0].get('parent');
-      if (self.firstRender) {
-        parentChart.render();
-      } else {
-        parentChart.repaint();
-      }
-    } else {
-      Util.each(linkCharts, function(chart) {
-        chart.filter(dim, val => {
-          val = xScale.translate(val);
-          return val <= max && val >= min;
-        });
-        if (self.firstRender) {
-          chart.render();
-        } else {
-          chart.repaint();
-        }
-      });
-    }
-    // }
   }
 }
 
