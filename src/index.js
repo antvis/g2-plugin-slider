@@ -9,8 +9,8 @@ const Range = require('./component/range');
 
 class Slider {
   _initProps() {
-    this.height = null;
-    this.width = null;
+    this.height = 26;
+    this.width = 'auto'; // 默认自适应
     this.padding = Global.plotCfg.padding;
     this.container = null;
     this.xAxis = null;
@@ -48,7 +48,16 @@ class Slider {
   constructor(cfg) {
     this._initProps();
     Util.deepMix(this, cfg);
-    this.domContainer = document.getElementById(this.container);
+    const container = this.container;
+    if (!container) {
+      throw new Error('Please specify the container for the Slider!');
+    }
+    if (Util.isString(container)) {
+      this.domContainer = document.getElementById(container);
+    } else {
+      this.domContainer = container;
+    }
+
     this.handleStyle = Util.mix({
       width: this.height,
       height: this.height
@@ -286,9 +295,9 @@ class Slider {
     const maxText = scale.getText(max);
     minTextElement.attr('text', minText);
     maxTextElement.attr('text', maxText);
+
     this.start = minText;
     this.end = maxText;
-
 
     if (this.onChange) {
       this.onChange({

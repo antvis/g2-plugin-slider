@@ -1,6 +1,6 @@
 {
   "name": "@antv/g2-plugin-slider",
-  "version": "1.0.0-beta.8",
+  "version": "1.0.0-rc",
   "description": "A datazoom slider plugin for G2.",
   "keywords": [
     "g2",

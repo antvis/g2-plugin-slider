@@ -14,7 +14,7 @@ range.id = 'range';
 document.body.appendChild(range);
 
 describe('Test cases', function() {
-  it('changeData && autoWidth', function() {
+  it.only('changeData && autoWidth', function() {
     // 设置状态量
     const ds = new DataSet({
       state: {
@@ -73,7 +73,7 @@ describe('Test cases', function() {
     chart.render();
 
     const slider = new Slider({
-      container: 'range', // DOM id
+      container: document.getElementById('range'), // DOM id
       width: 'auto',
       height: 26,
       start: '2004-01-01', // 和状态量对应
@@ -125,7 +125,7 @@ describe('Test cases', function() {
 
     }, 2000);
   });
-  it.only('basic', function() {
+  it('basic', function() {
     // 设置状态量，时间格式建议转换为时间戳
     const ds = new DataSet({
       state: {
