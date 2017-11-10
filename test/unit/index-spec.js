@@ -81,19 +81,19 @@ describe('Test cases', function() {
       data: PekingAQI, // 源数据
       xAxis: 'date', // 背景图的横轴对应字段，同时为数据筛选的字段
       yAxis: 'aqi', // 背景图的纵轴对应字段，同时为数据筛选的字段
-      // backgroundChart: {
-      //   type: 'area',
-      //   color: 'rgba(0, 0, 0, 0.3)'
-      // },
+      backgroundChart: {
+        type: 'line'
+        // color: 'rgba(0, 0, 0, 0.3)'
+      },
       // fillerStyle: {
       //   fill: 'rgba(0, 0, 0, 0.2)'
       // },
-      // backgroundStyle: {
-      //   stroke: '#f80',
-      //   fill: '#F3F3F3',
-      //   opacity: 0.2,
-      //   lineWidth: 2
-      // },
+      backgroundStyle: {
+        // stroke: '#f80',
+        // fill: '#F3F3F3',
+        // opacity: 0.2,
+        lineWidth: 5
+      },
       onChange: (min, max) => {
         ds.setState('start', min);
         ds.setState('end', max);

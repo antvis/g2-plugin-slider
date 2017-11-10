@@ -47,7 +47,7 @@ class Slider {
 
   constructor(cfg) {
     this._initProps();
-    Util.mix(this, cfg);
+    Util.deepMix(this, cfg);
     this.domContainer = document.getElementById(this.container);
     this.handleStyle = Util.mix({
       width: this.height,
