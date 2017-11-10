@@ -14,7 +14,7 @@ range.id = 'range';
 document.body.appendChild(range);
 
 describe('Test cases', function() {
-  it.only('changeData && autoWidth', function() {
+  it('changeData && autoWidth', function() {
     // 设置状态量
     const ds = new DataSet({
       state: {
@@ -40,7 +40,7 @@ describe('Test cases', function() {
     chart.scale({
       date: {
         type: 'time',
-        mask: 'YYYY-MM-DD',
+        mask: 'MM-DD',
         alias: '日期'
       }
     });
@@ -82,21 +82,21 @@ describe('Test cases', function() {
       xAxis: 'date', // 背景图的横轴对应字段，同时为数据筛选的字段
       yAxis: 'aqi', // 背景图的纵轴对应字段，同时为数据筛选的字段
       backgroundChart: {
-        type: 'line'
-        // color: 'rgba(0, 0, 0, 0.3)'
+        type: 'line',
+        color: 'rgba(0, 0, 0, 0.3)'
       },
       // fillerStyle: {
       //   fill: 'rgba(0, 0, 0, 0.2)'
       // },
-      backgroundStyle: {
-        // stroke: '#f80',
-        // fill: '#F3F3F3',
-        // opacity: 0.2,
-        lineWidth: 5
-      },
-      onChange: (min, max) => {
-        ds.setState('start', min);
-        ds.setState('end', max);
+      // backgroundStyle: {
+      //   stroke: '#f80',
+      //   fill: '#F3F3F3',
+      //   opacity: 0.2,
+      //   lineWidth: 2
+      // },
+      onChange: ({ startText, endText }) => {
+        ds.setState('start', startText);
+        ds.setState('end', endText);
       }
     });
     slider.render();
@@ -125,7 +125,7 @@ describe('Test cases', function() {
 
     }, 2000);
   });
-  it('basic', function() {
+  it.only('basic', function() {
     // 设置状态量，时间格式建议转换为时间戳
     const ds = new DataSet({
       state: {
@@ -217,15 +217,21 @@ describe('Test cases', function() {
       width: 600,
       height: 26,
       padding: [ 20, 120, 100 ],
-      start: ds.state.start, // 和状态量对应
-      end: ds.state.end,
+      start: '2015-04-07', // 和状态量对应
+      end: '2015-08-01',
       data: kData, // 源数据
       xAxis: 'time', // 背景图的横轴对应字段，同时为数据筛选的字段
       yAxis: 'volumn', // 背景图的纵轴对应字段，同时为数据筛选的字段
-      onChange: (min, max) => {
-
-        ds.setState('start', new Date(min).getTime());
-        ds.setState('end', new Date(max).getTime());
+      scales: {
+        time: {
+          type: 'time',
+          nice: false,
+          mask: 'MM-DD'
+        }
+      },
+      onChange: ({ startValue, endValue }) => {
+        ds.setState('start', startValue);
+        ds.setState('end', endValue);
       }
     });
     slider.render();

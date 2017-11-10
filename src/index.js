@@ -160,6 +160,11 @@ class Slider {
     const data = this.data;
     const xAxis = this.xAxis;
     const yAxis = this.yAxis;
+    const scales = Util.deepMix({
+      [`${xAxis}`]: {
+        range: [ 0, 1 ]
+      }
+    }, this.scales); // 用户列定义
     if (!data) { // 没有数据，则不创建
       throw new Error('Please specify the data!');
     }
@@ -186,10 +191,7 @@ class Slider {
       animate: false
     });
     bgChart.source(data);
-    bgChart.scale(xAxis, {
-      range: [ 0, 1 ],
-      nice: false
-    });
+    bgChart.scale(scales);
     bgChart.axis(false);
     bgChart.tooltip(false);
     bgChart.legend(false);
@@ -211,8 +213,14 @@ class Slider {
     const start = this.start;
     const end = this.end;
     const scale = this.scale;
-    const min = start ? scale.scale(start) : 1;
-    const max = end ? scale.scale(end) : 1;
+    let min = 0;
+    let max = 1;
+    if (start) {
+      min = scale.scale(scale.translate(start));
+    }
+    if (end) {
+      max = scale.scale(scale.translate(end));
+    }
     const range = [ min * 100, max * 100 ];
     this.range = range;
     return range;
@@ -281,8 +289,14 @@ class Slider {
     this.start = minText;
     this.end = maxText;
 
+
     if (this.onChange) {
-      this.onChange(minText, maxText);
+      this.onChange({
+        startText: minText,
+        endText: maxText,
+        startValue: min,
+        endValue: max
+      });
     }
   }
 }
