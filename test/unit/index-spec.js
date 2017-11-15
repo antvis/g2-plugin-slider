@@ -125,12 +125,13 @@ describe('Test cases', function() {
 
     }, 2000);
   });
+
   it('basic', function() {
     // 设置状态量，时间格式建议转换为时间戳
     const ds = new DataSet({
       state: {
-        start: new Date('2015-04-07').getTime(),
-        end: new Date('2015-08-01').getTime()
+        start: '2015-04-07',
+        end: '2015-07-28'
       }
     });
     const dv = ds.createView();
@@ -138,7 +139,7 @@ describe('Test cases', function() {
       .transform({
         type: 'filter',
         callback: obj => {
-          const date = new Date(obj.time).getTime();
+          const date = obj.time;
           return date <= ds.state.end && date >= ds.state.start;
         }
       })
@@ -166,8 +167,8 @@ describe('Test cases', function() {
         type: 'timeCat',
         nice: false,
         mask: 'MM-DD',
-        alias: '时间',
-        tickCount: 10
+        alias: '时间'
+        // tickCount: 10
       },
       volumn: { alias: '成交量' },
       start: { alias: '开盘价' },
@@ -218,20 +219,18 @@ describe('Test cases', function() {
       height: 26,
       padding: [ 20, 120, 100 ],
       start: '2015-04-07', // 和状态量对应
-      end: '2015-08-01',
+      end: '2015-07-28',
       data: kData, // 源数据
       xAxis: 'time', // 背景图的横轴对应字段，同时为数据筛选的字段
       yAxis: 'volumn', // 背景图的纵轴对应字段，同时为数据筛选的字段
       scales: {
         time: {
-          type: 'time',
-          nice: false,
-          mask: 'MM-DD'
+          type: 'timeCat'
         }
       },
-      onChange: ({ startValue, endValue }) => {
-        ds.setState('start', startValue);
-        ds.setState('end', endValue);
+      onChange: ({ startText, endText }) => {
+        ds.setState('start', startText);
+        ds.setState('end', endText);
       }
     });
     slider.render();

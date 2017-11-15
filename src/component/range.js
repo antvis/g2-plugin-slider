@@ -74,7 +74,7 @@ class Range extends Group {
     };
   }
 
-  _initHorizontalHandle(type) {
+  _initHandle(type) {
     const handle = this.addGroup();
     const layout = this.get('layout');
     const handleStyle = this.get('handleStyle');
@@ -83,16 +83,21 @@ class Range extends Group {
     const iconHeight = handleStyle.height;
 
     let text;
+    let handleIcon;
+    let triggerCursor;
+
 
     if (layout === 'horizontal') {
       const iconWidth = handleStyle.width;
-      handle.addShape('Image', {
+      triggerCursor = 'ew-resize';
+      handleIcon = handle.addShape('Image', {
         attrs: {
           x: -iconWidth / 2,
           y: 0,
           width: iconWidth,
           height: iconHeight,
-          img
+          img,
+          cursor: triggerCursor
         }
       });
       text = handle.addShape('Text', {
@@ -101,17 +106,20 @@ class Range extends Group {
           y: iconHeight / 2,
           textAlign: (type === 'min') ? 'end' : 'start',
           textBaseline: 'middle',
-          text: type === 'min' ? this.get('minText') : this.get('maxText')
+          text: type === 'min' ? this.get('minText') : this.get('maxText'),
+          cursor: triggerCursor
         }, this.get('textStyle'))
       });
     } else {
-      handle.addShape('Image', {
+      triggerCursor = 'ns-resize';
+      handleIcon = handle.addShape('Image', {
         attrs: {
           x: 0,
           y: -iconHeight / 2,
           width: iconWidth,
           height: iconHeight,
-          img
+          img,
+          cursor: triggerCursor
         }
       });
       text = handle.addShape('Text', {
@@ -120,12 +128,14 @@ class Range extends Group {
           y: (type === 'min') ? (iconHeight / 2 + OFFSET) : -(iconHeight / 2 + OFFSET),
           textAlign: 'center',
           textBaseline: 'middle',
-          text: type === 'min' ? this.get('minText') : this.get('maxText')
+          text: type === 'min' ? this.get('minText') : this.get('maxText'),
+          cursor: triggerCursor
         }, this.get('textStyle'))
       });
     }
 
     this.set(type + 'TextElement', text);
+    this.set(type + 'IconElement', handleIcon);
     return handle;
   }
 
@@ -145,16 +155,13 @@ class Range extends Group {
   }
 
   _beforeRenderUI() {
-    const layout = this.get('layout');
     const backgroundElement = this._initSliderBackground();
-    const minHandleElement = this._initHorizontalHandle('min');
-    const maxHandleElement = this._initHorizontalHandle('max');
+    const minHandleElement = this._initHandle('min');
+    const maxHandleElement = this._initHandle('max');
     const middleHandleElement = this.addShape('rect', {
       attrs: this.get('middleAttr')
     });
-    const trigerCursor = (layout === 'vertical') ? 'ns-resize' : 'ew-resize';
 
-    // this.add([ backgroundElement, minHandleElement, maxHandleElement ]);
     this.set('middleHandleElement', middleHandleElement);
     this.set('minHandleElement', minHandleElement);
     this.set('maxHandleElement', maxHandleElement);
@@ -164,8 +171,6 @@ class Range extends Group {
     minHandleElement.set('zIndex', 2);
     maxHandleElement.set('zIndex', 2);
     middleHandleElement.attr('cursor', 'move');
-    minHandleElement.attr('cursor', trigerCursor);
-    maxHandleElement.attr('cursor', trigerCursor);
     this.sort();
   }
 
