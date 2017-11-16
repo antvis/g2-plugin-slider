@@ -108,15 +108,7 @@ describe('Test cases', function() {
       const newData = PekingAQI.slice(10, 90);
       ds.setState('start', '2000-06-29');
       ds.setState('end', '2000-08-20');
-      dv.source(newData)
-        .transform({
-          type: 'filter',
-          callback: obj => {
-            return obj.date <= ds.state.end && obj.date >= ds.state.start;
-          }
-        });
-      view1.changeData(dv);
-      view2.changeData(dv);
+      dv.source(newData);
       slider.start = '2000-06-29';
       slider.end = '2000-08-20';
       slider.changeData(newData);
