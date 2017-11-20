@@ -1,6 +1,6 @@
 {
   "name": "@antv/g2-plugin-slider",
-  "version": "1.0.0-rc.1",
+  "version": "2.0.0",
   "description": "A datazoom slider plugin for G2.",
   "keywords": [
     "g2",
@@ -11,21 +11,21 @@
   "main": "build/g2-plugin-slider.js",
   "browser": "build/g2-plugin-slider.js",
   "module": "index.js",
-  "homepage": "http://gitlab.alibaba-inc.com/datavis/g2-plugin-slider",
-  "author": "sima.zhang",
+  "homepage": "https://github.com/antvis/g2-plugin-slider",
+  "author": "sima.zhang1990@gmail.com",
   "repository": {
     "type": "git",
-    "url": "git@gitlab.alibaba-inc.com:datavis/g2-plugin-slider.git"
+    "url": "git@github.com:antvis/g2-plugin-slider.git"
   },
   "bugs": {
     "url": "http://gitlab.alibaba-inc.com/datavis/g2-plugin-slider/issues"
   },
   "peerDependencies": {
-    "@antv/g2": ">=3.0.0-rc"
+    "@antv/g2": ">=3.0.0"
   },
   "devDependencies": {
     "@antv/data-set": "^0.5.4",
-    "@antv/g2": ">=3.0.0-rc",
+    "@antv/g2": "^3.0.0",
     "@lite-js/torch": "^0.2.6",
     "babel-eslint": "^7.2.3",
     "babel-loader": "^7.1.1",
@@ -48,7 +48,7 @@
   },
   "scripts": {
     "build": "webpack",
-    "ci": "tnpm run lint && tnpm run test",
+    "ci": "npm run lint && npm run test",
     "compress": "uglifyjs --compress --mangle --output dist/g-$npm_package_version.min.js -- build/g2-plugin-slider.js",
     "coverage": "npm run coverage-generator && npm run coverage-viewer",
     "coverage-viewer": "torch-coverage",
