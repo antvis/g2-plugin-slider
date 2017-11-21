@@ -1,6 +1,12 @@
-# g2-plugin-slider: a datazoom slider plugin for G2
+# g2-plugin-slider 
 
-## Installing
+[![npm package](https://img.shields.io/npm/v/@antv/g2-plugin-slider.svg?style=flat-square)](https://www.npmjs.com/package/@antv/g2-plugin-slider)
+[![NPM downloads](http://img.shields.io/npm/dm/@antv/g2-plugin-slider.svg?style=flat-square)](https://npmjs.org/package/@antv/g2-plugin-slider)
+[![Percentage of issues still open](http://isitmaintained.com/badge/open/antvis/g2-plugin-slider.svg)](http://isitmaintained.com/project/antvis/g2-plugin-slider "Percentage of issues still open")
+
+A datazoom slider plugin for G2.
+
+## Install
 
 **首先**，你先要确保 [G2](https://github.com/antvis/g2) 已经加载。
 
@@ -26,7 +32,6 @@ const slider = new Slider({
 });  
 </script>
 ```
-
 
 ## API Reference
 
