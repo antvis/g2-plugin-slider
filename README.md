@@ -10,7 +10,7 @@ A datazoom slider plugin for G2.
 
 **首先**，你先要确保 [G2](https://github.com/antvis/g2) 已经加载。
 
-如果你使用 npm，直接 `npm i @antv/g2-plugin-slider`。否则，直接下载[最新脚本]()。
+如果你使用 npm，直接 `npm i @antv/g2-plugin-slider`。否则，直接下载[最新脚本](http://unpkg.alipay.com/@antv/g2-plugin-slider)。
 
 ```javascript
 import G2 from '@antv/g2';
