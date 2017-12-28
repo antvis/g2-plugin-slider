@@ -74,6 +74,9 @@ class Slider {
   }
 
   forceFit() {
+    if (!this || this.destroyed) {
+      return;
+    }
     const width = DomUtil.getWidth(this.domContainer);
     const height = this.height;
     if (width !== this.domWidth) {
@@ -124,6 +127,7 @@ class Slider {
   }
 
   destroy() {
+    clearTimeout(this.resizeTimer);
     const rangeElement = this.rangeElement;
     rangeElement.off('sliderchange');
     this.bgChart && this.bgChart.destroy();
@@ -133,6 +137,7 @@ class Slider {
       container.removeChild(container.firstChild);
     }
     window.removeEventListener('resize', Util.getWrapBehavior(this, '_initForceFitEvent'));
+    this.destroyed = true;
   }
 
   clear() {
