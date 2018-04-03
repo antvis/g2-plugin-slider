@@ -246,6 +246,15 @@ class Range extends Group {
     return rst;
   }
 
+  _limitRange(diff, limit, range) {
+    range[0] = this._getRange(diff, range[0]);
+    range[1] = range[0] + limit;
+    if (range[1] > 100) {
+      range[1] = 100;
+      range[0] = range[1] - limit;
+    }
+  }
+
   _updateStatus(dim, ev) {
     const totalLength = dim === 'x' ? this.get('width') : this.get('height');
     dim = Util.upperFirst(dim);
@@ -260,6 +269,9 @@ class Range extends Group {
     const diffRange = (diffPage / totalLength) * 100 * sign;
     let diffStashRange;
 
+    const minRange = this.get('minRange');
+    const maxRange = this.get('maxRange');
+
     if (range[1] <= range[0]) {
       if (this._isElement(currentTarget, 'minHandleElement') || this._isElement(currentTarget, 'maxHandleElement')) {
         range[0] = this._getRange(diffRange, range[0]);
@@ -268,20 +280,38 @@ class Range extends Group {
     } else {
       if (this._isElement(currentTarget, 'minHandleElement')) {
         range[0] = this._getRange(diffRange, range[0]);
+        if (minRange) { // 设置了最小范围
+          if ((range[1] - range[0]) <= minRange) {
+            this._limitRange(diffRange, minRange, range);
+          }
+        }
+
+        if (maxRange) { // 设置了最大范围
+          if (range[1] - range[0] >= maxRange) {
+            this._limitRange(diffRange, maxRange, range);
+          }
+        }
       }
       if (this._isElement(currentTarget, 'maxHandleElement')) {
         range[1] = this._getRange(diffRange, range[1]);
+
+        if (minRange) { // 设置了最小范围
+          if ((range[1] - range[0]) <= minRange) {
+            this._limitRange(diffRange, minRange, range);
+          }
+        }
+
+        if (maxRange) { // 设置了最大范围
+          if (range[1] - range[0] >= maxRange) {
+            this._limitRange(diffRange, maxRange, range);
+          }
+        }
       }
     }
 
     if (this._isElement(currentTarget, 'middleHandleElement')) {
       diffStashRange = (rangeStash[1] - rangeStash[0]);
-      range[0] = this._getRange(diffRange, range[0]);
-      range[1] = range[0] + diffStashRange;
-      if (range[1] > 100) {
-        range[1] = 100;
-        range[0] = range[1] - diffStashRange;
-      }
+      this._limitRange(diffRange, diffStashRange, range);
     }
 
     this.emit('sliderchange', {

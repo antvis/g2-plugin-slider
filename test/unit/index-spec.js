@@ -4,6 +4,7 @@ const DataSet = require('@antv/data-set');
 const Slider = require('../../index');
 const PekingAQI = require('../fixtures/peking-aqi.json');
 const kData = require('../fixtures/candleSticks.json');
+const topData = require('../fixtures/top2000.json');
 
 const div = document.createElement('div');
 div.id = 'c1';
@@ -14,7 +15,7 @@ range.id = 'range';
 document.body.appendChild(range);
 
 describe('Test cases', function() {
-  it.only('changeData && autoWidth', function() {
+  it('changeData && autoWidth', function() {
     // 设置状态量
     const ds = new DataSet({
       state: {
@@ -118,7 +119,7 @@ describe('Test cases', function() {
     }, 2000);
   });
 
-  it('basic', function() {
+  it.only('basic', function() {
     // 设置状态量，时间格式建议转换为时间戳
     const ds = new DataSet({
       state: {
@@ -210,6 +211,8 @@ describe('Test cases', function() {
       width: 600,
       height: 26,
       padding: [ 20, 120, 100 ],
+      minSpan: 30 * 24 * 60 * 60 * 1000, // 设置最小值
+      maxSpan: 120 * 24 * 60 * 60 * 1000, // 设置最大值
       start: '2015-04-07', // 和状态量对应
       end: '2015-07-28',
       data: kData, // 源数据
@@ -226,5 +229,80 @@ describe('Test cases', function() {
       }
     });
     slider.render();
+  });
+
+  it('linear scale', function() {
+    const ds = new DataSet({
+      state: {
+        start: 1960,
+        end: 1984
+      }
+    });
+    const dv = ds.createView('test')
+      .source(topData)
+      .transform({
+        as: [ 'count' ],
+        groupBy: [ 'release' ],
+        operations: [ 'count' ],
+        type: 'aggregate'
+      })
+      .transform({
+        type: 'map',
+        callback(obj) {
+          obj.release *= 1;
+          return obj;
+        }
+      })
+      .transform({
+        type: 'filter',
+        callback: obj => {
+          const date = obj.release;
+          return date <= ds.state.end && date >= ds.state.start;
+        }
+      });
+
+    const chart = new G2.Chart({
+      container: 'c1',
+      width: 600,
+      height: 400,
+      animate: false,
+      padding: [ 20, 120, 100 ]
+    });
+    chart.source(dv);
+    chart.scale({
+      count: {
+        alias: 'top2000 唱片总量'
+      },
+      release: {
+        tickInterval: 5,
+        alias: '唱片发行年份'
+      }
+    });
+    chart.interval()
+      .position('release*count')
+      .color('#e50000');
+
+    chart.render();
+
+    const slider = new Slider({
+      container: 'range', // DOM id
+      width: 600,
+      height: 26,
+      padding: [ 20, 120, 100 ],
+      minSpan: 10, // 设置最小值
+      maxSpan: 50, // 设置最大值
+      start: 1960, // 和状态量对应
+      end: 1984,
+      data: topData, // 源数据
+      xAxis: 'release', // 背景图的横轴对应字段，同时为数据筛选的字段
+      yAxis: 'count', // 背景图的纵轴对应字段，同时为数据筛选的字段
+      onChange: ({ startText, endText }) => {
+        ds.setState('start', startText);
+        ds.setState('end', endText);
+      }
+    });
+    slider.render();
+
+
   });
 });
