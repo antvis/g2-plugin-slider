@@ -235,6 +235,26 @@ class Slider {
     if (end) {
       max = scale.scale(scale.translate(end));
     }
+
+    const { minSpan, maxSpan } = this;
+    let totalSpan = 0;
+    if (scale.type === 'time' || scale.type === 'timeCat') { // 时间类型已排序
+      const values = scale.values;
+      const firstValue = values[0];
+      const lastValue = values[values.length - 1];
+      totalSpan = lastValue - firstValue;
+    } else if (scale.isLinear) {
+      totalSpan = scale.max - scale.min;
+    }
+
+    if (totalSpan && minSpan) {
+      this.minRange = (minSpan / totalSpan) * 100;
+    }
+
+    if (totalSpan && maxSpan) {
+      this.maxRange = (maxSpan / totalSpan) * 100;
+    }
+
     const range = [ min * 100, max * 100 ];
     this.range = range;
     return range;
@@ -261,6 +281,8 @@ class Slider {
     const rangeElement = canvas.addGroup(Range, {
       middleAttr: this.fillerStyle,
       range,
+      minRange: this.minRange,
+      maxRange: this.maxRange,
       layout: this.layout,
       width: this.plotWidth,
       height: this.plotHeight,
