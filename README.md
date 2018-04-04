@@ -47,6 +47,8 @@ new Slider({
   yAxis: {string},
   start: {string} | {number},
   end: {string} | {number},
+  minSpan: {number},
+  maxSpan: {number},
   data: {array} | {dataview},
   fillerStyle?: {object},
   backgroundStyle?: {object},
@@ -107,6 +109,18 @@ new Slider({
 (number | string)
 
 声明滑动条结束滑块的位置对应的数据值，默认为最大值。
+
+- `minSpan`
+
+(number)
+
+筛选的最小范围限制，必须对应原始数据的范围，如果是时间，请使用时间戳。
+
+- `maxSpan`
+
+(number)
+
+筛选的最大范围限制，必须对应原始数据的范围，如果是时间，请使用时间戳。
 
 - `scales`
 
