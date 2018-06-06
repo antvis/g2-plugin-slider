@@ -341,6 +341,8 @@ class Range extends Group {
     const containerDOM = this.get('canvas').get('containerDOM');
     this.onMouseMoveListener = DomUtil.addEventListener(containerDOM, 'mousemove', Util.wrapBehavior(this, '_onCanvasMouseMove'));
     this.onMouseUpListener = DomUtil.addEventListener(containerDOM, 'mouseup', Util.wrapBehavior(this, '_onCanvasMouseUp'));
+    // @2018-06-06 by blue.lb 添加mouseleave事件监听，让用户在操作出滑块区域后有一个“正常”的效果，可以正常重新触发滑块的操作流程
+    this.onMouseLeaveListener = DomUtil.addEventListener(containerDOM, 'mouseleave', Util.wrapBehavior(this, '_onCanvasMouseUp'));
   }
 
   _onCanvasMouseMove(ev) {
@@ -359,6 +361,7 @@ class Range extends Group {
   _removeDocumentEvents() {
     this.onMouseMoveListener.remove();
     this.onMouseUpListener.remove();
+    this.onMouseLeaveListener.remove();
   }
 }
 
