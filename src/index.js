@@ -28,6 +28,15 @@ class Slider {
       lineWidth: 1
     };
     this.range = [ 0, 100 ];
+    // @2018-06-25 by blue.lb 构建时间范围选择器所需要的配置项
+    // 是否隐藏左右两边的文案
+    this.hideTextElement = false;
+    // 是否开启范围选择模式
+    this.rangeMode = false;
+    // 一屏占比
+    this.oneScreenScale = 0;
+    // 中间滑块的宽度占用总宽度的比例
+    this.rangeWidthRatio = 1;
     this.layout = 'horizontal';
     // 文本颜色
     this.textStyle = {
@@ -73,6 +82,12 @@ class Slider {
     this.resizeTimer = timer;
   }
 
+  // @2018-06-25 by blue.lb 外部方法允许重写设置一屏相对于整个数据宽度的比例
+  setOneScreenScale(scale) {
+    this.oneScreenScale = scale;
+    this.start = 0;
+    this.end = this.rangeWidthRatio;
+  }
   forceFit() {
     if (!this || this.destroyed) {
       return;
@@ -85,6 +100,10 @@ class Slider {
       this.bgChart && this.bgChart.changeWidth(width);
       canvas.clear();
       this._initWidth();
+      // @2018-07-18 by blue.lb 在resize时需要计算出新的宽度比例
+      if (this.resizeSlider) {
+        this.resizeSlider(this);
+      }
       this._initSlider(); // 初始化滑动条
       this._bindEvent();
       canvas.draw();
@@ -227,6 +246,8 @@ class Slider {
     const start = this.start;
     const end = this.end;
     const scale = this.scale;
+    // @2018-07-18 by blue.lb 获取新增的属性
+    const rangeWidthRatio = this.rangeWidthRatio;
     let min = 0;
     let max = 1;
     if (start) {
@@ -235,7 +256,10 @@ class Slider {
     if (end) {
       max = scale.scale(scale.translate(end));
     }
-
+    // @2018-07-18 by blue.lb 赋值给最大值，这里是为了固定滑块的宽度
+    if (rangeWidthRatio) {
+      max = rangeWidthRatio;
+    }
     const { minSpan, maxSpan } = this;
     let totalSpan = 0;
     if (scale.type === 'time' || scale.type === 'timeCat') { // 时间类型已排序
@@ -281,6 +305,10 @@ class Slider {
     const rangeElement = canvas.addGroup(Range, {
       middleAttr: this.fillerStyle,
       range,
+      // @2018-07-18 by blue.lb 传入给滑块示例属性
+      rangeMode: this.rangeMode,
+      rangeWidthRatio: this.rangeWidthRatio,
+      hideTextElement: this.hideTextElement,
       minRange: this.minRange,
       maxRange: this.maxRange,
       layout: this.layout,
@@ -305,23 +333,46 @@ class Slider {
     const rangeElement = self.rangeElement;
     rangeElement.on('sliderchange', function(ev) {
       const range = ev.range;
-      const minRatio = range[0] / 100;
-      const maxRatio = range[1] / 100;
+      // @2018-07-18 by blue.lb 首先获取滑块的对应的范围
+      let x = range[0];
+      let y = range[1];
+      // @2018-07-18 by blue.lb 判断仅应用为滑动展示时间的工具，根据最大值换算当前滑动块占用范围对应的位置
+      if (self.rangeMode && self.oneScreenScale > 0) {
+        const rate = 100 * (1 - self.rangeWidthRatio);
+        const indexNum = self.oneScreenScale * 100;
+        const rangeX = (range[0] * 100 / rate);
+        const index = Math.floor(rangeX / indexNum);
+        x = index * indexNum;
+        y = (index + 1) * indexNum;
+        if (y > 100) {
+          y = 100;
+          x = 100 - indexNum;
+        }
+      }
+      const minRatio = x / 100;
+      const maxRatio = y / 100;
       self._updateElement(minRatio, maxRatio);
     });
+    if (self.rangeMode) {
+      const minRatio = 0;
+      const maxRatio = self.oneScreenScale;
+      self._updateElement(minRatio, maxRatio);
+    }
   }
 
   _updateElement(minRatio, maxRatio) {
     const scale = this.scale;
     const rangeElement = this.rangeElement;
-    const minTextElement = rangeElement.get('minTextElement');
-    const maxTextElement = rangeElement.get('maxTextElement');
     const min = scale.invert(minRatio);
     const max = scale.invert(maxRatio);
     const minText = scale.getText(min);
     const maxText = scale.getText(max);
-    minTextElement.attr('text', minText);
-    maxTextElement.attr('text', maxText);
+    if (!this.hideTextElement) {
+      const minTextElement = rangeElement.get('minTextElement');
+      const maxTextElement = rangeElement.get('maxTextElement');
+      minTextElement.attr('text', minText);
+      maxTextElement.attr('text', maxText);
+    }
 
     this.start = minText;
     this.end = maxText;

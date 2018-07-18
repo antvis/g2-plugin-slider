@@ -12,6 +12,21 @@ class Range extends Group {
   getDefaultCfg() {
     return {
       /**
+       * 是否开启范围选择模式
+       * @type {Boolean}
+       */
+      rangeMode: false,
+      /**
+       * 滑块宽度的占总背景宽的比例
+       * @type {Number}
+       */
+      rangeWidthRatio: 0.2,
+      /**
+       * 是否显示左右两侧的文案
+       * @type {Boolean}
+       */
+      hideTextElement: false,
+      /**
        * 范围
        * @type {Array}
        */
@@ -82,14 +97,12 @@ class Range extends Group {
     const iconWidth = handleStyle.width;
     const iconHeight = handleStyle.height;
 
-    let text;
     let handleIcon;
     let triggerCursor;
 
 
     if (layout === 'horizontal') {
-      const iconWidth = handleStyle.width;
-      triggerCursor = 'ew-resize';
+      triggerCursor = this.get('rangeMode') ? 'move' : 'ew-resize';
       handleIcon = handle.addShape('Image', {
         attrs: {
           x: -iconWidth / 2,
@@ -100,18 +113,8 @@ class Range extends Group {
           cursor: triggerCursor
         }
       });
-      text = handle.addShape('Text', {
-        attrs: Util.mix({
-          x: (type === 'min') ? -(iconWidth / 2 + OFFSET) : iconWidth / 2 + OFFSET,
-          y: iconHeight / 2,
-          textAlign: (type === 'min') ? 'end' : 'start',
-          textBaseline: 'middle',
-          text: type === 'min' ? this.get('minText') : this.get('maxText'),
-          cursor: triggerCursor
-        }, this.get('textStyle'))
-      });
     } else {
-      triggerCursor = 'ns-resize';
+      triggerCursor = this.get('rangeMode') ? 'move' : 'ns-resize';
       handleIcon = handle.addShape('Image', {
         attrs: {
           x: 0,
@@ -122,20 +125,36 @@ class Range extends Group {
           cursor: triggerCursor
         }
       });
-      text = handle.addShape('Text', {
-        attrs: Util.mix({
-          x: iconWidth / 2,
-          y: (type === 'min') ? (iconHeight / 2 + OFFSET) : -(iconHeight / 2 + OFFSET),
-          textAlign: 'center',
-          textBaseline: 'middle',
-          text: type === 'min' ? this.get('minText') : this.get('maxText'),
-          cursor: triggerCursor
-        }, this.get('textStyle'))
-      });
     }
-
-    this.set(type + 'TextElement', text);
     this.set(type + 'IconElement', handleIcon);
+    // @2018-06-22 by blue.lb 范围选择模式，不要显示内容
+    if (!this.get('hideTextElement')) {
+      let text;
+      if (layout === 'horizontal') {
+        text = handle.addShape('Text', {
+          attrs: Util.mix({
+            x: (type === 'min') ? -(iconWidth / 2 + OFFSET) : iconWidth / 2 + OFFSET,
+            y: iconHeight / 2,
+            textAlign: (type === 'min') ? 'end' : 'start',
+            textBaseline: 'middle',
+            text: type === 'min' ? this.get('minText') : this.get('maxText'),
+            cursor: triggerCursor
+          }, this.get('textStyle'))
+        });
+      } else {
+        text = handle.addShape('Text', {
+          attrs: Util.mix({
+            x: iconWidth / 2,
+            y: (type === 'min') ? (iconHeight / 2 + OFFSET) : -(iconHeight / 2 + OFFSET),
+            textAlign: 'center',
+            textBaseline: 'middle',
+            text: type === 'min' ? this.get('minText') : this.get('maxText'),
+            cursor: triggerCursor
+          }, this.get('textStyle'))
+        });
+      }
+      this.set(type + 'TextElement', text);
+    }
     return handle;
   }
 
@@ -200,7 +219,6 @@ class Range extends Group {
         width: (maxRatio - minRatio) * width,
         height
       });
-
       minHandleElement.translate(minRatio * width, 0);
       maxHandleElement.translate(maxRatio * width, 0);
     } else {
@@ -277,7 +295,7 @@ class Range extends Group {
         range[0] = this._getRange(diffRange, range[0]);
         range[1] = this._getRange(diffRange, range[0]);
       }
-    } else {
+    } else if (!this.get('rangeMode')) {
       if (this._isElement(currentTarget, 'minHandleElement')) {
         range[0] = this._getRange(diffRange, range[0]);
         if (minRange) { // 设置了最小范围
@@ -308,8 +326,14 @@ class Range extends Group {
         }
       }
     }
-
-    if (this._isElement(currentTarget, 'middleHandleElement')) {
+    // @2018-06-22 by blue.lb 这里判断如果是范围选择，则这里选择上、下滑块与选择中滑块效果一致
+    if (this.get('rangeMode') && (this._isElement(currentTarget, 'maxHandleElement') || this._isElement(currentTarget, 'minHandleElement') || this._isElement(currentTarget, 'middleHandleElement'))) {
+      range[0] = this._getRange(diffRange, range[0]);
+      if (range[0] > 100 - this.get('rangeWidthRatio') * 100) {
+        range[0] = 100 - this.get('rangeWidthRatio') * 100;
+      }
+      range[1] = range[0] + this.get('rangeWidthRatio') * 100;
+    } else if (this._isElement(currentTarget, 'middleHandleElement')) {
       diffStashRange = (rangeStash[1] - rangeStash[0]);
       this._limitRange(diffRange, diffStashRange, range);
     }
@@ -321,7 +345,6 @@ class Range extends Group {
     this.set('page' + dim, currentPage);
     this._renderUI();
     this.get('canvas').draw(); // need delete
-    return;
   }
 
   _onMouseDown(ev) {
@@ -341,6 +364,8 @@ class Range extends Group {
     const containerDOM = this.get('canvas').get('containerDOM');
     this.onMouseMoveListener = DomUtil.addEventListener(containerDOM, 'mousemove', Util.wrapBehavior(this, '_onCanvasMouseMove'));
     this.onMouseUpListener = DomUtil.addEventListener(containerDOM, 'mouseup', Util.wrapBehavior(this, '_onCanvasMouseUp'));
+    // @2018-06-06 by blue.lb 添加mouseleave事件监听，让用户在操作出滑块区域后有一个“正常”的效果，可以正常重新触发滑块的操作流程
+    this.onMouseLeaveListener = DomUtil.addEventListener(containerDOM, 'mouseleave', Util.wrapBehavior(this, '_onCanvasMouseUp'));
   }
 
   _onCanvasMouseMove(ev) {
@@ -359,6 +384,7 @@ class Range extends Group {
   _removeDocumentEvents() {
     this.onMouseMoveListener.remove();
     this.onMouseUpListener.remove();
+    this.onMouseLeaveListener.remove();
   }
 }
 
