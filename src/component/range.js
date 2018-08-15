@@ -191,8 +191,13 @@ class Range extends Group {
     const minHandleElement = this.get('minHandleElement');
     const maxHandleElement = this.get('maxHandleElement');
     const middleHandleElement = this.get('middleHandleElement');
-    minHandleElement.initTransform();
-    maxHandleElement.initTransform();
+    if (minHandleElement.resetMatrix) {
+      minHandleElement.resetMatrix();
+      maxHandleElement.resetMatrix();
+    } else {
+      minHandleElement.initTransform();
+      maxHandleElement.initTransform();
+    }
     if (layout === 'horizontal') {
       middleHandleElement.attr({
         x: width * minRatio,
