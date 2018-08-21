@@ -331,7 +331,9 @@ class Slider {
         startText: minText,
         endText: maxText,
         startValue: min,
-        endValue: max
+        endValue: max,
+        startRadio: minRatio,
+        endRadio: maxRatio
       });
     }
   }

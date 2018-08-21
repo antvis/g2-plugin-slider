@@ -147,7 +147,7 @@ new Slider({
 
   ```js
   onChange: (obj) => {
-    const { startValue, endValue, startText, endText } = obj;
+    const { startValue, endValue, startText, endText, startRadio, endRadio } = obj;
   }
   ```
 
@@ -155,8 +155,11 @@ new Slider({
   * `endValue` 终点滑块当前对应的原始数据值，如果是 `time` 或者 `timeCat` 类型是，该值为时间戳，请注意。
   * `startText` 起点滑块当前的显示文本值
   * `endText` 终点滑块当前的显示文本值
+  * `startRadio` 起点滑块当前对应的范围边界值，值介于 [0, 1]
+  * `endRadio` 终点滑块当前对应的范围边界值，值介于 [0, 1]
 
-> 说明：之所以区分 text 和 value，是因为大部分情况下用户会对数值进行格式化，所以在设置状态量和更新状态量时，需要保证前后数值类型的一致。
+> 说明1：之所以区分 text 和 value，是因为大部分情况下用户会对数值进行格式化，所以在设置状态量和更新状态量时，需要保证前后数值类型的一致。
+> 说明2：若数据并非有序排列，则可以通过 `[startRadio, endRadio]` 获取到滑块起点和终点选中的范围
 
 - `fillerStyle`
 
