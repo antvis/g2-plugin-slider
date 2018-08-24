@@ -7,6 +7,8 @@ const { Chart, Util, G, Global } = G2;
 const { Canvas, DomUtil } = G;
 const Range = require('./component/range');
 
+const isNumber = val => typeof val === 'number';
+
 class Slider {
   _initProps() {
     this.height = 26;
@@ -224,15 +226,25 @@ class Slider {
   }
 
   _initRange() {
+    const startRadio = this.startRadio;
+    const endRadio = this.endRadio;
     const start = this.start;
     const end = this.end;
     const scale = this.scale;
     let min = 0;
     let max = 1;
-    if (start) {
+
+    // startRadio 优先级高于 start
+    if (isNumber(startRadio)) {
+      min = startRadio;
+    } else if (start) {
       min = scale.scale(scale.translate(start));
     }
-    if (end) {
+
+    // endRadio 优先级高于 end
+    if (isNumber(endRadio)) {
+      max = endRadio;
+    } else if (end) {
       max = scale.scale(scale.translate(end));
     }
 

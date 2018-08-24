@@ -47,6 +47,8 @@ new Slider({
   yAxis: {string},
   start: {string} | {number},
   end: {string} | {number},
+  startRadio?: {number},
+  endRadio?: {number},
   minSpan: {number},
   maxSpan: {number},
   data: {array} | {dataview},
@@ -97,6 +99,23 @@ new Slider({
 (array | dataview)
 
 **必须声明**，数据源。
+
+- `startRadio`
+
+(number)
+
+声明滑动条起始滑块的位置对应的范围边界值，值介于 [0, 1]。
+
+注意：`startRadio` 和 `start` 同时声明时，以 `startRadio` 为准。
+
+- `endRadio`
+
+(number)
+
+声明滑动条结束滑块的位置对应的范围边界值，值介于 [0, 1]。
+
+注意：`endRadio` 和 `end` 同时声明时，以 `endRadio` 为准。
+
 
 - `start`
 
