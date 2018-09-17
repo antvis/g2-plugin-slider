@@ -2,10 +2,12 @@
  * @fileOverview G2's plugin for datazoom.
  * @author sima.zhang
  */
+const Range = require('./component/range');
+
 const G2 = window && window.G2;
 const { Chart, Util, G, Global } = G2;
-const { Canvas, DomUtil } = G;
-const Range = require('./component/range');
+const { Canvas } = G;
+const { DomUtil } = Util;
 
 const isNumber = val => typeof val === 'number';
 

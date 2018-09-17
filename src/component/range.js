@@ -4,7 +4,8 @@
  */
 const G2 = window && window.G2;
 const { Util, G } = G2;
-const { Group, DomUtil } = G;
+const { Group } = G;
+const { DomUtil } = Util;
 const OFFSET = 5;
 
 

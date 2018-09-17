@@ -17,23 +17,10 @@ module.exports = {
     rules: [
       {
         test: /\.js$/,
-        // exclude: /(node_modules|bower_components)/,
         use: {
           loader: 'babel-loader',
           options: {
-            babelrc: false,
-            plugins: [
-              'transform-remove-strict-mode'
-            ],
-            presets: [
-              [
-                'es2015', {
-                  loose: true,
-                  modules: false
-                }
-              ],
-              'stage-0'
-            ]
+            babelrc: true
           }
         }
       }
