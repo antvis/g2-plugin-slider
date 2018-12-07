@@ -337,8 +337,8 @@ class Slider {
     minTextElement.attr('text', minText);
     maxTextElement.attr('text', maxText);
 
-    this.start = minText;
-    this.end = maxText;
+    this.start = min;
+    this.end = max;
 
     if (this.onChange) {
       this.onChange({
