@@ -251,3 +251,70 @@ slider 滑块的背景图表配置，可配置其图表类型以及颜色：
 - `slider.destroy()`
 
 `slider.destroy()` 销毁。
+
+
+### 新增时间滚动应用
+
+```js
+  this.ds = new DataSet({
+    // 这里需要计算，可以直接赋值x轴的第一个值和最后一个值
+    state: {
+      from: '开始位置(需要计算)',
+      to: '结束位置(需要计算)'
+    }
+  });
+  const dv = this.ds.createView(DATA_VIEW_NAME);
+  // 需要传入你的数据
+  dv.source(data);
+  this.slider = new Slider({
+    container: sliderDom, // 用于显示该组件的 dom 容器 ID
+    rangeWidthRatio: 0.2, // 设置滑块占总背景的宽度
+    oneScreenScale: this._getOneScreenScale(), // 注意这里需要自己计算，因为每张图对应的最小一屏展示都是不同的，如果大于1则不用初始化slider
+    width: 'auto', // 可选，指定滑块的宽度，如果不指定则默认同 chart 相同，如果 chart 自适应宽度，slider 也会自适应宽度复制代码
+    height: 30, // 指定滑块的高度
+    data: this.ds.getView(DATA_VIEW_NAME).origin,
+    padding: [0, 0, 0, 0],
+    xAxis: 'xAxis', // 滑块控制的维度
+    yAxis: 'max', // 滑块背景图表对应的 Y 轴维度, 没有传入则默认不绘制背景图
+    // 是否隐藏左右两边的文案
+    hideTextElement: true,
+    // 是否开启范围选择模式
+    rangeMode: true,
+    onChange: ({ startText, endText }) => {
+      // !!! 更新状态量
+      this.ds.setState('from', startText);
+      this.ds.setState('to', endText);
+    },
+    // 当图表发生resize时，需要重新制定一屏在总屏中的占比
+    resizeSlider: (o) => {
+      const osScale = this._getOneScreenScale();
+      o.setOneScreenScale(osScale);
+    }
+  });
+  this.slider.render();
+```
+
+### 提供一种计算一屏应该展示多少的方法
+
+```js
+  _getOneScreenScale() {
+    const chartWidth = this.chart.get('width');
+    // 用一个labelWidth，全局的储存住当前x轴所有坐标的宽度之和
+    if (!this.labelWidth) {
+      const padding = this.chart.get('plot').get('padding');
+      const xAxes = this.chart.get('axisController').axes[0];
+      const labelsGroup = xAxes.get('labelsGroup');
+      const labels = labelsGroup.get('children');
+      this.labelWidth = padding[1] + padding[3];
+      labels.forEach((label) => {
+        // !!!这里示例在更新数据以后会直接导致无法获取label的示例，源码里面可以实时计算容器的位置
+        const bbox = label.calculateBox();
+        if (bbox) {
+          const width = bbox.maxX - bbox.minX + SPACE;
+          this.labelWidth += width;
+        }
+      });
+    }
+    return chartWidth / this.labelWidth;
+  }
+```
