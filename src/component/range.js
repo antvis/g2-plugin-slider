@@ -8,6 +8,9 @@ const { Group } = G;
 const { DomUtil } = Util;
 const OFFSET = 5;
 
+const UA = navigator.userAgent.toLowerCase();
+const isMobile = UA.indexOf('iphone') !== -1 || UA.indexOf('android') !== -1;
+
 
 class Range extends Group {
   getDefaultCfg() {
@@ -230,7 +233,11 @@ class Range extends Group {
   }
 
   _bindUI() {
-    this.on('mousedown', Util.wrapBehavior(this, '_onMouseDown'));
+    if (isMobile) {
+      this.on('touchstart', Util.wrapBehavior(this, '_onMouseDown'));
+    } else {
+      this.on('mousedown', Util.wrapBehavior(this, '_onMouseDown'));
+    }
   }
 
   _isElement(target, name) { // 判断是否是该元素
@@ -334,8 +341,13 @@ class Range extends Group {
     const currentTarget = ev.currentTarget;
     const originEvent = ev.event;
     const range = this.get('range');
-    originEvent.stopPropagation();
-    originEvent.preventDefault();
+    if (isMobile) {
+      ev.stopPropagation();
+      ev.preventDefault();
+    } else {
+      originEvent.stopPropagation();
+      originEvent.preventDefault();
+    }
     this.set('pageX', originEvent.pageX);
     this.set('pageY', originEvent.pageY);
     this.set('currentTarget', currentTarget);
@@ -345,10 +357,15 @@ class Range extends Group {
 
   _bindCanvasEvents() {
     const containerDOM = this.get('canvas').get('containerDOM');
-    this.onMouseMoveListener = DomUtil.addEventListener(containerDOM, 'mousemove', Util.wrapBehavior(this, '_onCanvasMouseMove'));
-    this.onMouseUpListener = DomUtil.addEventListener(containerDOM, 'mouseup', Util.wrapBehavior(this, '_onCanvasMouseUp'));
-    // @2018-06-06 by blue.lb 添加mouseleave事件监听，让用户在操作出滑块区域后有一个“正常”的效果，可以正常重新触发滑块的操作流程
-    this.onMouseLeaveListener = DomUtil.addEventListener(containerDOM, 'mouseleave', Util.wrapBehavior(this, '_onCanvasMouseUp'));
+    if (isMobile) {
+      this.onMouseMoveListener = DomUtil.addEventListener(containerDOM, 'touchmove', Util.wrapBehavior(this, '_onCanvasMouseMove'));
+      this.onMouseUpListener = DomUtil.addEventListener(containerDOM, 'touchend', Util.wrapBehavior(this, '_onCanvasMouseUp'));
+    } else {
+      this.onMouseMoveListener = DomUtil.addEventListener(containerDOM, 'mousemove', Util.wrapBehavior(this, '_onCanvasMouseMove'));
+      this.onMouseUpListener = DomUtil.addEventListener(containerDOM, 'mouseup', Util.wrapBehavior(this, '_onCanvasMouseUp'));
+      // @2018-06-06 by blue.lb 添加mouseleave事件监听，让用户在操作出滑块区域后有一个“正常”的效果，可以正常重新触发滑块的操作流程
+      this.onMouseLeaveListener = DomUtil.addEventListener(containerDOM, 'mouseleave', Util.wrapBehavior(this, '_onCanvasMouseUp'));
+    }
   }
 
   _onCanvasMouseMove(ev) {
