@@ -196,6 +196,7 @@ class Slider {
     const backgroundChart = this.backgroundChart;
     let type = backgroundChart.type;
     const color = backgroundChart.color;
+    const shape = backgroundChart.shape;
     if (!Util.isArray(type)) {
       type = [ type ];
     }
@@ -213,11 +214,34 @@ class Slider {
     bgChart.axis(false);
     bgChart.tooltip(false);
     bgChart.legend(false);
-    Util.each(type, eachType => {
-      bgChart[eachType]()
+    Util.each(type, (eachType, index) => {
+      const bgGeom = bgChart[eachType]()
         .position(xAxis + '*' + yAxis)
-        .color(color)
         .opacity(1);
+
+      const colorItem = Util.isArray(color) ? color[index] : color;
+      if (colorItem) {
+        if (Util.isObject(colorItem)) {
+          // 通过 { field: 'ss', colors: [ ] } 的方式申明color
+          if (colorItem.field) {
+            bgGeom.color(colorItem.field, colorItem.colors);
+          }
+        } else {
+          bgGeom.color(colorItem);
+        }
+      }
+
+      const shapeItem = Util.isArray(shape) ? shape[index] : shape;
+      if (shapeItem) {
+        if (Util.isObject(shapeItem)) {
+          // 通过 { field: 'ss', shapes: [ ], callback } 的方式申明shape
+          if (shapeItem.field) {
+            bgGeom.shape(shapeItem.field, shapeItem.callback || shapeItem.shapes);
+          }
+        } else {
+          bgGeom.shape(shapeItem);
+        }
+      }
     });
     bgChart.render();
     this.bgChart = bgChart;
