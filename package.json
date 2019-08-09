@@ -33,7 +33,7 @@
     "babel-loader": "~8.0.0",
     "babel-plugin-transform-remove-strict-mode": "0.0.2",
     "chai": "~4.0.1",
-    "electron": "~1.8.2-beta5",
+    "electron": "~4.0.1",
     "eslint": "~3.19.0",
     "eslint-config-airbnb": "~15.0.1",
     "eslint-config-egg": "~4.2.0",
